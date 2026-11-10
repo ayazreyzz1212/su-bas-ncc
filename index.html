@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090b12">
+  <title>SUNUM | Sıvı Basıncı</title>
+  <style>
+    :root {
+      --bg: #090b12;
+      --panel: rgba(15, 19, 31, .78);
+      --panel-strong: rgba(17, 22, 36, .94);
+      --line: rgba(255,255,255,.12);
+      --text: #f4f6ff;
+      --muted: #aab2c5;
+      --accent: #ff465f;
+      --accent-2: #ff8b62;
+      --shadow: 0 24px 80px rgba(0,0,0,.38);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text);
+      background: radial-gradient(ellipse at 18% 15%, #20263b 0, transparent 38%),
+                  radial-gradient(ellipse at 85% 80%, #311b2b 0, transparent 34%), var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+    /* Arka plan videosunu kullanmak için aşağıdaki video etiketinin yorumunu kaldır.
+       Dosya adını kendi videonla değiştir: background.mp4 */
+    .background-video {
+      position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover;
+      z-index: -2; opacity: .42; pointer-events: none;
+    }
+    .backdrop {
+      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background: linear-gradient(115deg, rgba(5,7,13,.82), rgba(7,9,16,.58));
+    }
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px clamp(18px, 5vw, 64px);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(7,9,15,.48); backdrop-filter: blur(18px);
+    }
+    .brand { font-size: 14px; font-weight: 850; letter-spacing: .24em; }
+    .brand::before { content: ""; display: inline-block; width: 8px; height: 8px; margin: 0 11px 1px 0; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px var(--accent); }
+    .top-note { color: var(--muted); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+    main { width: min(1100px, calc(100% - 36px)); margin: 0 auto; padding: 130px 0 100px; }
+    .hero { min-height: 320px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    .eyebrow { color: var(--accent-2); font-size: 11px; letter-spacing: .28em; text-transform: uppercase; font-weight: 800; }
+    h1 { margin: 14px 0 12px; font-size: clamp(42px, 8vw, 76px); line-height: 1; letter-spacing: -.055em; }
+    .hero p { max-width: 590px; margin: 0; color: var(--muted); line-height: 1.7; }
+    .home-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; max-width: 760px; margin: 20px auto 0; }
+    button { font: inherit; }
+    .main-card, .topic-button, .back-button, .close-button {
+      color: var(--text); border: 1px solid var(--line); cursor: pointer;
+      transition: transform .25s ease, border-color .25s ease, background .25s ease, box-shadow .25s ease;
+    }
+    .main-card {
+      position: relative; overflow: hidden; min-height: 150px; padding: 28px;
+      text-align: left; border-radius: 20px; background: var(--panel); box-shadow: var(--shadow);
+    }
+    .main-card::after { content: "↗"; position: absolute; right: 25px; top: 22px; color: var(--accent); font-size: 23px; }
+    .main-card:hover, .topic-button:hover { transform: translateY(-5px); border-color: rgba(255,70,95,.65); box-shadow: 0 16px 42px rgba(0,0,0,.28); }
+    .main-card strong { display: block; font-size: clamp(17px, 2vw, 21px); margin-bottom: 9px; }
+    .main-card span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .section { display: none; animation: sectionIn .45s ease both; }
+    .section.active { display: block; }
+    @keyframes sectionIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin: 10px 0 24px; }
+    .section-head h2 { margin: 8px 0 0; font-size: clamp(27px, 5vw, 42px); letter-spacing: -.04em; }
+    .back-button { padding: 10px 15px; border-radius: 999px; background: rgba(255,255,255,.06); white-space: nowrap; }
+    .back-button:hover, .close-button:hover { background: rgba(255,70,95,.15); border-color: var(--accent); }
+    .topic-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+    .topic-button {
+      min-height: 76px; padding: 18px 20px; border-radius: 15px; text-align: left;
+      background: var(--panel); display: flex; align-items: center; gap: 15px;
+      animation: buttonIn .45s ease both;
+    }
+    .topic-button:nth-child(2) { animation-delay: .04s; }
+    .topic-button:nth-child(3) { animation-delay: .08s; }
+    .topic-button:nth-child(4) { animation-delay: .12s; }
+    .topic-button:nth-child(5) { animation-delay: .16s; }
+    .topic-button:nth-child(n+6) { animation-delay: .2s; }
+    @keyframes buttonIn { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .number { flex: 0 0 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; color: var(--accent-2); background: rgba(255,70,95,.12); font-size: 12px; font-weight: 800; }
+    .topic-button span:last-child { font-size: 14px; font-weight: 650; line-height: 1.4; }
+    .content-panel {
+      margin-top: 20px; padding: clamp(22px, 4vw, 38px); border: 1px solid var(--line);
+      border-radius: 20px; background: var(--panel-strong); box-shadow: var(--shadow);
+      animation: sectionIn .35s ease both;
+    }
+    .content-panel h3 { margin: 0 0 15px; font-size: clamp(22px, 4vw, 30px); }
+    .content-text { color: #d0d5e2; line-height: 1.8; white-space: pre-wrap; }
+    .edit-hint { margin-top: 18px; color: #8993aa; font-size: 12px; }
+    .photo-placeholder {
+      min-height: 220px; margin-top: 22px; display: grid; place-items: center; overflow: hidden;
+      border: 1px dashed rgba(255,255,255,.28); border-radius: 15px;
+      color: #9ba5ba; background: rgba(255,255,255,.035); text-align: center;
+    }
+    .photo-placeholder img { display: block; width: 100%; max-height: 420px; object-fit: contain; }
+    .photo-placeholder .placeholder-copy { padding: 24px; }
+    .photo-placeholder strong { display: block; margin-bottom: 7px; color: #dce1ed; }
+    .footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.09); color: #7f899f; text-align: center; font-size: 12px; }
+    .about-button {
+      position: fixed; right: 22px; bottom: 20px; z-index: 25; padding: 12px 17px;
+      border: 1px solid rgba(255,255,255,.2); border-radius: 999px; color: white;
+      background: rgba(16,20,31,.88); backdrop-filter: blur(12px); cursor: pointer;
+      font-size: 11px; font-weight: 800; letter-spacing: .14em;
+      box-shadow: 0 8px 30px rgba(0,0,0,.3);
+    }
+    .about-button:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .modal { position: fixed; inset: 0; z-index: 40; display: none; place-items: center; padding: 20px; background: rgba(0,0,0,.72); backdrop-filter: blur(9px); }
+    .modal.open { display: grid; animation: fadeIn .2s ease both; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-card { width: min(760px, 100%); max-height: min(82vh, 850px); overflow: auto; padding: clamp(20px, 4vw, 34px); border: 1px solid var(--line); border-radius: 20px; background: #111624; box-shadow: var(--shadow); animation: sectionIn .25s ease both; }
+    .modal-top { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 20px; }
+    .modal-top h2 { margin: 0; font-size: 24px; }
+    .close-button { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.06); font-size: 20px; }
+    .license { color: #d1d7e5; line-height: 1.75; font-size: 14px; }
+    .license h3 { margin: 22px 0 7px; color: white; font-size: 16px; }
+    .license p { margin: 8px 0; }
+    .license ul { padding-left: 22px; }
+    @media (max-width: 650px) {
+      .top-note { display: none; }
+      main { padding-top: 105px; }
+      .hero { min-height: 280px; }
+      .home-grid, .topic-grid { grid-template-columns: 1fr; }
+      .main-card { min-height: 125px; }
+      .section-head { align-items: start; flex-direction: column; }
+      .about-button { right: 14px; bottom: 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Arka plan videonu eklemek için bu satırdaki yorumu kaldır:
+  <video class="background-video" autoplay muted loop playsinline>
+    <source src="background.mp4" type="video/mp4">
+  </video>
+  -->
+  <div class="backdrop"></div>
+
+  <header class="topbar">
+    <div class="brand">SUNUM</div>
+    <div class="top-note">Sıvı basıncı • Eğitim projesi</div>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="eyebrow">EĞİTİM • BİLGİ • SUNUM</div>
+      <h1>Sıvı Basıncı</h1>
+      <p>Sunum konularına ve ölçüm aletlerine aşağıdaki bölümlerden ulaşabilirsin.</p>
+      <div class="home-grid">
+        <button class="main-card" onclick="showSection('presentation')">
+          <strong>SUNUM</strong>
+          <span>Sıvı basıncı konularını görüntüle</span>
+        </button>
+        <button class="main-card" onclick="showSection('instruments')">
+          <strong>ÖLÇÜM ALETLERİ</strong>
+          <span>Ölçüm aletlerini ve fotoğraf alanlarını görüntüle</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="section" id="presentation">
+      <div class="section-head">
+        <div><div class="eyebrow">SUNUM KONULARI</div><h2>Konu başlıkları</h2></div>
+        <button class="back-button" onclick="goHome()">← Ana sayfa</button>
+      </div>
+      <div class="topic-grid" id="presentationButtons"></div>
+      <article class="content-panel" id="presentationContent" hidden>
+        <h3 id="presentationTitle"></h3>
+        <div class="content-text" id="presentationText"></div>
+        <div class="edit-hint"></div>
+      </article>
+    </section>
+
+    <section class="section" id="instruments">
+      <div class="section-head">
+        <div><div class="eyebrow">ÖLÇÜM ALETLERİ</div><h2>Alet kataloğu</h2></div>
+        <button class="back-button" onclick="goHome()">← Ana sayfa</button>
+      </div>
+      <div class="topic-grid" id="instrumentButtons"></div>
+      <article class="content-panel" id="instrumentContent" hidden>
+        <h3 id="instrumentTitle"></h3>
+        <div class="content-text" id="instrumentText"></div>
+        <div class="photo-placeholder" id="instrumentPhoto">
+          <div class="placeholder-copy"><strong>Fotoğraf alanı</strong>Fotoğrafını eklemek için dosyada ilgili aletin image değerine dosya adını yaz.</div>
+        </div>
+        <div class="edit-hint"></div>
+      </article>
+    </section>
+
+    <div class="footer">© 2026 • Sıvı Basıncı Sunum Projesi</div>
+  </main>
+
+  <button class="about-button" onclick="openAbout()">HAKKIMDA</button>
+
+  <div class="modal" id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" onclick="if(event.target === this) closeAbout()">
+    <div class="modal-card">
+      <div class="modal-top">
+        <h2 id="aboutTitle">Resmî Lisans ve Telif Hakkı Beyanı</h2>
+        <button class="close-button" aria-label="Kapat" onclick="closeAbout()">×</button>
+      </div>
+      <div class="license">
+        <h3>RESMİ LİSANS VE TELİF HAKKI BEYANI</h3>
+        <p><strong>Proje Adı:</strong> Sıvılarda Basçınç Web Sitesi ve Sunum Projesi</p>
+        <p><strong>Geliştirici / Sahibi:</strong> Miraç Ayaz A****</p>
+        <p><strong>Yayın Tarihi:</strong> 2026</p>
+
+        <h3>1. Telif Hakkı ve Sahiplik</h3>
+        <p>Bu web sitesinin, projeye ait tüm dijital içeriklerin, kaynak kodlarının, tasarımların, görsellerin ve sunum materyallerinin tüm hakları <strong>Miraç Ayaz A****</strong>'a aittir. 5846 sayılı Fikir ve Sanat Eserleri Kanunu ve ilgili uluslararası telif hakkı yasaları gereğince koruma altındadır.</p>
+
+        <h3>2. Kullanım Lisansı</h3>
+        <p>İşbu web sitesi ve içeriği, eğitim ve bilgilendirme amaçlı olarak aşağıdaki şartlar altında sunulmaktadır:</p>
+        <ul>
+          <li><strong>İzin Verilen Kullanımlar:</strong> İçerikler yalnızca bireysel eğitim, araştırma ve sunum çalışmaları kapsamında kaynak gösterilerek incelenebilir.</li>
+          <li><strong>Yasaklanan Kullanımlar:</strong> Sahibinin (Miraç Ayaz A****) yazılı izni olmaksızın bu web sitesinin kodlarının, tasarımının veya içeriklerinin ticari amaçla çoğaltılması, kopyalanması, başka bir web sitesinde yayınlanması veya değiştirilerek kullanılması kesinlikle yasaktır.</li>
+        </ul>
+
+        <h3>3. İletişim ve Hak Talepleri</h3>
+        <p>Bu projeyle ilgili her türlü telif, lisans veya iş birliği talepleri için proje geliştiricisi Miraç Ayaz A**** ile iletişime geçilebilir.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // SUNUM METİNLERİ: Tırnak işaretleri arasındaki örnek metinleri kendi yazılarınla değiştir.
+    const PRESENTATION_CONTENT = [
+      { title: "Günlük Hayatta Sıvı Basıncı", text: "Günlük Hayatta Sıvı Basıncı Sıvı basıncı günlük hayatımızda birçok alanda karşımıza çıkar. Bunun en bilinen örneklerinden biri barajlardır. Barajların alt kısımları üst kısımlarına göre daha kalın yapılır. Çünkü suyun derinliği arttıkça uyguladığı basınç da artar. Bir diğer örnek su depolarıdır. Su depoları genellikle yüksek yerlere yerleştirilir. Bunun amacı suyun basınç yardımıyla borulara ve musluklara ulaşmasını sağlamaktır. Dalgıçlar da sıvı basıncından doğrudan etkilenir. Denizin derinliklerine indikçe üzerlerindeki su basıncı artar. Bu nedenle derin dalışlarda özel ekipmanlar kullanılır. Ayrıca su kuleleri, hidroelektrik santraller ve su tesisatları da sıvı basıncından yararlanılan alanlardır. Bu örnekler sıvı basıncının günlük hayatımızdaki önemini göstermektedir." },
+      { title: "Sıvı Basıncı Nedir?", text: "Sıvı Basıncı Nedir? Sıvı basıncı, sıvıların ağırlıklarından dolayı bulundukları kabın tabanına ve yan yüzeylerine uyguladıkları basınçtır. Sıvılar bulundukları kabın şeklini alır ve temas ettikleri yüzeylere her yönde basınç uygular. Sıvı basıncının oluşmasının temel nedeni yer çekimidir. Bir sıvının içerisinde derinlik arttıkça basınç da artar. Bunun sebebi, derinlere inildikçe üzerimizde bulunan sıvı miktarının artmasıdır. Örneğin denizde yüzerken daha derine indiğimizde kulaklarımızda daha fazla basınç hissederiz. Sıvı basıncı yalnızca derinliğe değil, sıvının yoğunluğuna da bağlıdır. Yoğunluğu fazla olan sıvılar aynı derinlikte daha fazla basınç oluşturur. Sıvı basıncı kabın şekline veya genişliğine bağlı değildir. Sıvı basıncı Pascal birimiyle ölçülür ve P = h × d × g formülüyle hesaplanır." },
+      { title: "Sıvı Basıncını Etkileyen Faktörler", text: "Buraya sıvı basıncını etkileyen faktörleri anlatan metnini yaz." },
+      { title: "Sıvı Basıncının Günlük Hayattaki Uygulamaları", text: "Sıvı Basıncının Günlük Hayattaki Uygulamaları Sıvı basıncının en önemli uygulamalarından biri hidrolik sistemlerdir. Hidrolik sistemler Pascal prensibine göre çalışır. Pascal prensibine göre kapalı bir sıvıya uygulanan basınç, sıvının her noktasına ve kabın yüzeylerine aynen iletilir. Bu prensip sayesinde küçük bir kuvvetle daha büyük kuvvetler elde edilebilir. Örneğin otomobillerde kullanılan hidrolik fren sistemleri bu prensiple çalışır. Sürücü fren pedalına bastığında oluşan basınç fren sistemine iletilir ve aracın yavaşlaması sağlanır. Bir diğer örnek hidrolik araç liftleridir. Tamirhanelerde araçları yukarı kaldırmak için kullanılır. Hidrolik presler ise büyük cisimleri sıkıştırmak ve şekillendirmek için kullanılır. Ayrıca kepçe ve ekskavatör gibi iş makinelerinde de hidrolik sistemlerden yararlanılır. Bu sistemler ağır işlerin daha kolay ve kontrollü yapılmasını sağlar." },
+      { title: "Sıvı Basınç Ölçüm Aletlersıvı basıncını etkileyen faktörler", text: "Sıvı basıncını etkileyen üç temel faktör bulunmaktadır. Bunlar sıvının derinliği, sıvının yoğunluğu ve yer çekimi ivmesidir. İlk olarak derinlikten bahsedelim. Sıvının derinliği arttıkça basınç da artar. Örneğin denizin yüzeyinde bulunan bir kişiyle denizin daha derininde bulunan bir kişi aynı basınca maruz kalmaz. İkinci faktör sıvının yoğunluğudur. Yoğunluğu fazla olan sıvılar, yoğunluğu az olan sıvılara göre daha fazla basınç uygular. Örneğin cıva, sudan daha yoğun olduğu için aynı yükseklikte daha fazla basınç oluşturur. Üçüncü faktör ise yer çekimidir. Yer çekimi arttığında sıvının uyguladığı basınç da artar. Burada önemli bir bilgi de sıvı basıncının kabın şekline bağlı olmamasıdır. Yani aynı sıvı, aynı derinlikte farklı şekillerdeki kaplarda eşit basınç oluşturur." }
+    ];
+
+    // image: "" alanına fotoğraf dosyasının adını yaz. Örnek: "manometre.jpg"
+const INSTRUMENTS = [
+  { title: "Manometre", text: "Kapalı kaplardaki gaz basıncını ölçen araçtır.", image: "" },
+  { title: "Manometre (Gliserinli)", text: "Titreşimli ortamlarda basıncı daha dengeli ve hassas ölçmek için gliserin kullanılan manometredir.", image: "" },
+  { title: "Manometre (Milibar)", text: "Basıncı milibar (mbar) birimiyle ölçen manometredir.", image: "" },
+  { title: "Hidrometre", text: "Sıvıların yoğunluğunu ölçen araçtır.", image: "" },
+  { title: "Termometre", text: "Maddelerin sıcaklığını ölçen araçtır.", image: "" },
+  { title: "Kazan Termometresi", text: "Kalorifer ve buhar kazanlarındaki sıcaklığı ölçen araçtır.", image: "" },
+  { title: "Manometre (Helezonu Akış Kırıcılı)", text: "Basınç ölçümünde akışın oluşturduğu titreşim ve dalgalanmaların etkisini azaltmaya yardımcı olan manometredir.", image: "" },
+  { title: "Kazan Termostatı", text: "Kazan sıcaklığını kontrol ederek belirlenen sıcaklıkta sistemi açıp kapatan araçtır.", image: "" },
+  { title: "Manometre Musluğu", text: "Manometre ile tesisat arasındaki basınç bağlantısını açıp kapatmaya yarayan vanadır.", image: "" }
+];
+
+    const $ = (id) => document.getElementById(id);
+
+    function makeButtons(items, targetId, onSelect) {
+      const target = $(targetId);
+      target.innerHTML = "";
+      items.forEach((item, index) => {
+        const button = document.createElement("button");
+        button.className = "topic-button";
+        button.innerHTML = `<span class="number">${String(index + 1).padStart(2, "0")}</span><span></span>`;
+        button.querySelector("span:last-child").textContent = item.title;
+        button.addEventListener("click", () => onSelect(item));
+        target.appendChild(button);
+      });
+    }
+
+    function showSection(id) {
+      $("home").style.display = "none";
+      document.querySelectorAll(".section").forEach(section => section.classList.remove("active"));
+      $(id).classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function goHome() {
+      document.querySelectorAll(".section").forEach(section => section.classList.remove("active"));
+      $("home").style.display = "flex";
+      $("presentationContent").hidden = true;
+      $("instrumentContent").hidden = true;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    makeButtons(PRESENTATION_CONTENT, "presentationButtons", (item) => {
+      $("presentationTitle").textContent = item.title;
+      $("presentationText").textContent = item.text;
+      $("presentationContent").hidden = false;
+      $("presentationContent").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+
+    makeButtons(INSTRUMENTS, "instrumentButtons", (item) => {
+      $("instrumentTitle").textContent = item.title;
+      $("instrumentText").textContent = item.text;
+      const photo = $("instrumentPhoto");
+      photo.innerHTML = "";
+      if (item.image) {
+        const img = document.createElement("img");
+        img.src = item.image;
+        img.alt = item.title + " fotoğrafı";
+        img.onerror = () => {
+          photo.innerHTML = '<div class="placeholder-copy"><strong>Fotoğraf bulunamadı</strong>Dosya adını ve konumunu kontrol et.</div>';
+        };
+        photo.appendChild(img);
+      } else {
+        photo.innerHTML = '<div class="placeholder-copy"><strong>Fotoğraf alanı</strong>Bu aletin fotoğrafını daha sonra ekleyebilirsin.</div>';
+      }
+      $("instrumentContent").hidden = false;
+      $("instrumentContent").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+
+    function openAbout() { $("aboutModal").classList.add("open"); document.body.style.overflow = "hidden"; }
+    function closeAbout() { $("aboutModal").classList.remove("open"); document.body.style.overflow = ""; }
+    document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeAbout(); });
+  </script>
+</body>
+</html>
