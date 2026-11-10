@@ -296,7 +296,8 @@ const INSTRUMENTS = [
       photo.innerHTML = "";
       if (item.image) {
         const img = document.createElement("img");
-        img.src = item.image;
+        img.src = new URL(item.image, document.baseURI).href;
+console.log("Fotoğraf yolu:", img.src);
         img.alt = item.title + " fotoğrafı";
         img.onerror = () => {
           photo.innerHTML = '<div class="placeholder-copy"><strong>Fotoğraf bulunamadı</strong>Dosya adını ve konumunu kontrol et.</div>';
